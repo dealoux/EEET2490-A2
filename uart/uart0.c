@@ -1,5 +1,6 @@
 #include "uart0.h"
 #include "../kernel/mbox.h"
+#include "../kernel/string.h"
 
 /**
  * Set baud rate and characteristics (115200 8N1) and map to GPIO
@@ -174,4 +175,63 @@ void uart_dec(int num)
 	str[len] = '\0';
 
 	uart_puts(str);
+}
+
+void uart_set_baud_rate(unsigned int baud) {
+  unsigned int baud_divisor = 4000000 / (16 * baud);
+  unsigned int fractional_part = ((4000000.0 / (16 * baud)) - baud_divisor) * 64 + 0.5;
+
+  UART0_IBRD = baud_divisor;
+  UART0_FBRD = fractional_part;
+}
+
+void uart_set_data_bits(unsigned char data_bits) {
+  UART0_LCRH &= ~(3 << 5); // Clear the WLEN bits
+  switch (data_bits) {
+    case 5:
+      UART0_LCRH |= UART0_LCRH_WLEN_5BIT;
+      break;
+    case 6:
+      UART0_LCRH |= UART0_LCRH_WLEN_6BIT;
+      break;
+    case 7:
+      UART0_LCRH |= UART0_LCRH_WLEN_7BIT;
+      break;
+    case 8:
+    default:
+      UART0_LCRH |= UART0_LCRH_WLEN_8BIT;
+      break;
+  }
+}
+
+void uart_set_stop_bits(unsigned char stop_bits) {
+  if(stop_bits == 2) {
+    UART0_LCRH |= UART0_LCRH_STP2;  // Enable two stop bits
+  } 
+	else {
+    UART0_LCRH &= ~UART0_LCRH_STP2; // Default to one stop bit
+  }
+}
+
+void uart_set_parity(char *parity) {
+  if (strcmp(parity, "none") == 0) {
+    UART0_LCRH &= ~UART0_LCRH_PEN; // Disable parity
+  } 
+	else if (strcmp(parity, "even") == 0) {
+    UART0_LCRH |= (UART0_LCRH_PEN | UART0_LCRH_EPS); // Enable even parity
+  } 
+	else if (strcmp(parity, "odd") == 0) {
+    UART0_LCRH |= UART0_LCRH_PEN;
+    UART0_LCRH &= ~UART0_LCRH_EPS; // Enable odd parity
+  }
+}
+
+void uart_enable_handshaking() {
+  UART0_CR |= (UART0_CR_RTSEN | UART0_CR_CTSEN);  // Enable both RTS and CTS
+  uart_puts("Handshaking enabled.\n");
+}
+
+void uart_disable_handshaking() {
+  UART0_CR &= ~(UART0_CR_RTSEN | UART0_CR_CTSEN); // Disable both RTS and CTS
+  uart_puts("Handshaking disabled.\n");
 }

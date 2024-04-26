@@ -1,6 +1,6 @@
 #include "command.h"
 #include "printf.h"
-#include "../uart/uart1.h"
+#include "../uart/uart0.h"
 #include "../kernel/mbox.h"
 #include "../kernel/string.h"
 
@@ -13,6 +13,12 @@ Command commandList[] = {
   {"clear", "Clear the terminal.\nExample: MyBareOS> clear\n", clearScreen},
   {"setcolor", "Set text color, and/or background color of the console to one of the following colors: BLACK, RED, GREEN, YELLOW, BLUE, PURPLE, CYAN, WHITE.\nExamples:\n MyBareOS> setcolor -t green\nMyBareOS> setcolor -b green -t yellow\n", setConsoleColor},
   {"showinfo", "Show board revision and board MAC address.", displayBoardInfo},
+  // uarts commands
+  {"set_baud", "Set UART baud rate.\nExample: MyBareOS> set_baud 9600", setBaudRate},
+  {"set_databits", "Set number of data bits.\nExample: MyBareOS> set_databits 7", setDataBits},
+  {"set_stopbits", "Set stop bits configuration to 1 or 2.\nExample: ", setStopBits},
+  {"set_parity", "Set parity configuration to one of the following: NONE, EVEN, ODD.\nExample: MyBareOS> set_parity odd", setParity},
+  {"set_handshaking", "Set CTS/RTS handshaking to ON or OFF.\nExample: MyBareOS> set_handshaking on", setHandshaking},
 };
 
 // Instantiate the colors
@@ -26,6 +32,29 @@ ColorMap colorMappings[] = {
   {"cyan", "\033[1;36m", "\x1b[46m"},
   {"white", "\033[1;37m", "\x1b[47m"}
 };
+
+unsigned long strtoul(const char *str, char **endptr, int base){
+  unsigned long result = 0;
+  while (*str){
+    if (*str >= '0' && *str <= '9'){
+      result = result * base + *str - '0';
+    }
+    else if (*str >= 'A' && *str <= 'Z'){
+      result = result * base + *str - 'A' + 10;
+    }
+    else if (*str >= 'a' && *str <= 'z'){
+      result = result * base + *str - 'a' + 10;
+    }
+    else{
+      break;
+    }
+    str++;
+  }
+  if (endptr){
+    *endptr = (char *)str;
+  }
+  return result;
+}
 
 const char *findTextColor(const char *colorStr){
   for (size_t i = 0; i < sizeof(colorMappings) / sizeof(ColorMap); i++){
@@ -162,4 +191,49 @@ void displayBoardInfo(char *args)
   mbox_buffer_setup(ADDR(mBuf), MBOX_TAG_GETCLKRATE, &response, 8, 0, 2);
   mbox_call(ADDR(mBuf), MBOX_CH_PROP);
   printf("UART clock rate %12c %dMHz\n", ':', response[0] / 1000000); // convert to MH
+}
+
+void setBaudRate(char *args) {
+  unsigned int baudRate = strtoul(args, NULL, 10);
+  uart_set_baud_rate(baudRate);
+  uart_puts("\nBaud rate updated.\n");
+}
+
+void setDataBits(char *args) {
+  unsigned char dataBits = (unsigned char)strtoul(args, NULL, 10);
+  uart_set_data_bits(dataBits);
+  uart_puts("\nData bits setting updated.\n");
+}
+
+void setStopBits(char *args) {
+  unsigned char stop_bits = (unsigned char)strtoul(args, NULL, 10);
+  if (stop_bits == 1 || stop_bits == 2) {
+    uart_set_stop_bits(stop_bits);
+    uart_puts("\nStop bits setting updated.\n");
+  } 
+  else {
+    uart_puts("\nInvalid stop bits setting. Use '1' or '2'.\n");
+  }
+}
+
+void setParity(char *args) {
+  if (strcmp(args, "none") == 0 || strcmp(args, "even") == 0 || strcmp(args, "odd") == 0) {
+    uart_set_parity(args);
+    uart_puts("\nParity setting updated.\n");
+  } 
+  else {
+    uart_puts("\nInvalid parity setting. Use 'none', 'even', or 'odd'.\n");
+  }
+}
+
+void setHandshaking(char *args) {
+  if (strcmp(args, "on") == 0) {
+    uart_enable_handshaking();
+  } 
+  else if (strcmp(args, "off") == 0) {
+    uart_disable_handshaking();
+  } 
+  else {
+    uart_puts("\nInvalid handshaking command. Use 'on' or 'off'.\n");
+  }
 }

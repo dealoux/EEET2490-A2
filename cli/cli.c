@@ -1,7 +1,7 @@
 #include "cli.h"
 #include "command.h"
 #include "printf.h"
-#include "../uart/uart1.h"
+#include "../uart/uart0.h"
 #include "../kernel/mbox.h"
 #include "../kernel/string.h"
 

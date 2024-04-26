@@ -4,9 +4,9 @@ CFILES = $(wildcard ./kernel/*.c)
 OFILES = $(CFILES:./kernel/%.c=./build/%.o)
 GCCFLAGS = -Wall -O2 -ffreestanding -nostdinc -nostdlib
 
-uart1: clean uart1_build printf_build cli_build command_build kernel8.img run1
 uart0: clean uart0_build printf_build cli_build command_build kernel8.img run0
-all: uart1
+uart1: clean uart1_build printf_build cli_build command_build kernel8.img run1
+all: uart0
 
 cli_build: ./cli/cli.c
 	aarch64-linux-gnu-gcc $(GCCFLAGS) -c ./cli/cli.c -o ./build/cli.o
