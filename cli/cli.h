@@ -5,18 +5,16 @@
 typedef void (*CommandFunction)(char *args);
 
 // Struct to represent a command
-typedef struct
-{
-    const char *name;        // Command name
-    const char *description; // Short description
-    CommandFunction handler; // Function to handle the command
+typedef struct{
+  const char *name;        // Command name
+  const char *description; // Short description
+  CommandFunction handler; // Function to handle the command
 } Command;
 
-typedef struct
-{
-    const char *colorName;      // Color name
-    const char *textColorAscii; // Font color
-    const char *bgColorAscii;   // Background colors
+typedef struct{
+  const char *colorName;      // Color name
+  const char *textColorAscii; // Font color
+  const char *bgColorAscii;   // Background colors
 } ColorMap;
 
 // Public function to process a command
