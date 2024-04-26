@@ -18,8 +18,8 @@ void cli()
 	static int index = 0;
 	static int isNewCommand = 1;
 
-	if (isNewCommand) // print prompt
-	{
+	// print prompt
+	if(isNewCommand){
 		printf("\n");
 		printf("MyBareOS> ");
 		isNewCommand = 0;
@@ -28,59 +28,73 @@ void cli()
 	// read and send back each char
 	char c = uart_getc();
 	
-	// handle special characters
-	// backspace or delete
-	if (c == 0x7F || c == 0x08){
-		if(index > 0) {
-			uart_sendc(0x08);		  // move cursor backwards
-			uart_sendc(' ');		  // overwrite the last character with space
-			uart_sendc(0x08);		  // move cursor backwards again
-			index--;				  // decrement buffer index
-			cli_buffer[index] = '\0'; // "delete" last char in buffer
-		}
-	}
-	else if(c == '+'){
-		if(historyIndex > -1){
-			historyIndex--;
-			if (historyIndex == -1)	  // back to the newest command
-				cli_buffer[0] = '\0'; // empty the buffer
-			else
+	// handle special 
+	
+	switch(c){
+		// handle backspace & delete
+		case 0x7F:
+		case 0x08:
+			if(index > 0) {
+				uart_sendc(0x08);		  // move cursor backwards
+				uart_sendc(' ');		  // overwrite the last character with space
+				uart_sendc(0x08);		  // move cursor backwards again
+				index--;				  // decrement buffer index
+				cli_buffer[index] = '\0'; // "delete" last char in buffer
+			}
+			break;
+
+		case '+':
+			if(historyIndex > -1){
+				historyIndex--;
+				if (historyIndex == -1)	  // back to the newest command
+					cli_buffer[0] = '\0'; // empty the buffer
+				else
+					strcpy(cli_buffer, commandHistory[historyIndex]);
+
+				printf("\rMyBareOS> %s", cli_buffer);
+				index = strlen(cli_buffer);
+			}
+			break;
+
+		case '_':
+			if (historyIndex < lastCommandIndex - 1){
+				historyIndex++;
 				strcpy(cli_buffer, commandHistory[historyIndex]);
+				printf("\rMyBareOS> %s", cli_buffer);
+				index = strlen(cli_buffer);
+			}
+			break;
 
-			printf("\rMyBareOS> %s", cli_buffer);
-			index = strlen(cli_buffer);
-		}
-	}
-	else if(c == '_'){
-		if (historyIndex < lastCommandIndex - 1){
-			historyIndex++;
-			strcpy(cli_buffer, commandHistory[historyIndex]);
-			printf("\rMyBareOS> %s", cli_buffer);
-			index = strlen(cli_buffer);
-		}
-	}
-	else if(c == '\t'){
-		autocompleteHandler(cli_buffer, &index);
-	}
-	else if(c != '\n'){
-		uart_sendc(c);		   // echo the character
-		cli_buffer[index] = c; // Store into the buffer
-		index++;
-	}
-	else if(c == '\n'){
-		cli_buffer[index] = '\0';
+		case '\t':
+			autocompleteHandler(cli_buffer, &index);
+			break;
 
-		// save command to history
-		strcpy(commandHistory[lastCommandIndex % MAX_HISTORY], cli_buffer);
-		lastCommandIndex++;
-		if (lastCommandIndex >= MAX_HISTORY)
-			lastCommandIndex = 0; // start overwriting oldest commands
-		historyIndex = -1;		  // reset history position
+		case '\n':
+			cli_buffer[index] = '\0';
 
-		/* Compare with supported commands and execute
-		 * ........................................... */
-		processCommand(cli_buffer);
-		isNewCommand = 1;
+			// save command to history
+			strcpy(commandHistory[lastCommandIndex % MAX_HISTORY], cli_buffer);
+			lastCommandIndex++;
+			if (lastCommandIndex >= MAX_HISTORY)
+				lastCommandIndex = 0; // start overwriting oldest commands
+			historyIndex = -1;		  // reset history position
+
+			/* Compare with supported commands and execute
+			 * ........................................... */
+			processCommand(cli_buffer);
+			isNewCommand = 1;
+			index = 0;
+			break;
+
+		default:
+			uart_sendc(c);		   // echo the character
+			cli_buffer[index] = c; // Store into the buffer
+			index++;
+			break;
+	}
+
+	// prevent buffer overflow
+	if (index >= MAX_CMD_SIZE){
 		index = 0;
 	}
 }
