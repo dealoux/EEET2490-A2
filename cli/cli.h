@@ -7,6 +7,7 @@ typedef void (*CommandFunction)(char *args);
 // Declarations
 void processCommand(char *command);
 void autocompleteHandler(char *buffer, int *index);
+void cli_main();
 void initCli();
 
 #endif

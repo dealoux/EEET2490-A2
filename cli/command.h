@@ -2,6 +2,7 @@
 #define COMMAND_H
 
 #define COMMAND_COUNT 5
+#define COLOR_COUNT 8
 
 // Function type for command handlers
 typedef void (*CommandFunction)(char *args);
@@ -21,6 +22,7 @@ typedef struct{
 
 // List of commands
 extern Command commandList[COMMAND_COUNT];
+extern ColorMap colorMappings[COLOR_COUNT];
 
 // Declarations
 const char *findTextColor(const char *colorStr);

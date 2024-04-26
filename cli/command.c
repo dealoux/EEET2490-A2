@@ -16,7 +16,7 @@ Command commandList[] = {
 };
 
 // Instantiate the colors
-const ColorMap colorMappings[] = {
+ColorMap colorMappings[] = {
   {"black", "\033[1;30m", "\x1b[40m"},
   {"red", "\033[1;31m", "\x1b[41m"},
   {"green", "\033[1;32m", "\x1b[42m"},
@@ -24,7 +24,8 @@ const ColorMap colorMappings[] = {
   {"blue", "\033[1;34m", "\x1b[44m"},
   {"purple", "\033[1;35m", "\x1b[45m"},
   {"cyan", "\033[1;36m", "\x1b[46m"},
-  {"white", "\033[1;37m", "\x1b[47m"}};
+  {"white", "\033[1;37m", "\x1b[47m"}
+};
 
 const char *findTextColor(const char *colorStr){
   for (size_t i = 0; i < sizeof(colorMappings) / sizeof(ColorMap); i++){
