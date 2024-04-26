@@ -10,6 +10,7 @@
 
 char commandHistory[MAX_HISTORY][MAX_CMD_SIZE];
 int lastCommandIndex = 0;
+int historyIndex = 0;
 
 extern volatile unsigned int mBuf[];
 
@@ -53,59 +54,80 @@ void cli_main() {
 
   char c = uart_getc();
 
-  switch (c) {
-    // Handle backspace and delete
-    case 0x7F:
-    case 0x08:  
-      if (index > 0) {
-        uart_sendc('\b');      // move cursor backwards
-        uart_sendc(' ');       // overwrite the last character with space
-        uart_sendc('\b');      // move cursor backwards again
-        cli_buffer[--index] = '\0';  // "delete" last char in buffer
-      }
-      break;
+  // Detecting the beginning of an escape sequence (for handling arrow keys) 
+  if (c == '\033') { // ESC character
+    uart_getc(); // skip the '['
+    c = uart_getc(); // get the actual arrow direction
 
-    case 0x18:  // Up arrow
-      if (lastCommandIndex > 0) {
-        int prevIndex = (lastCommandIndex - 1) % MAX_HISTORY;
-        strcpy(cli_buffer, commandHistory[prevIndex]);
-        lastCommandIndex = prevIndex;
-        printf("\rMyBareOS> %s", cli_buffer);
-        index = strlen(cli_buffer);
-      }
-      break;
-
-    case 0x19:  // Down arrow
-        if (lastCommandIndex < MAX_HISTORY - 1) {
-          int nextIndex = (lastCommandIndex + 1) % MAX_HISTORY;
-          if (*commandHistory[nextIndex]) {  // only navigate to filled slots
-            strcpy(cli_buffer, commandHistory[nextIndex]);
-            lastCommandIndex = nextIndex;
-            printf("\rMyBareOS> %s", cli_buffer);
-            index = strlen(cli_buffer);
-          }
+    // Handle arrow keys
+    switch (c) {
+      // Up arrow
+      case 'A':
+        if (historyIndex > 0) {
+          historyIndex--;
+          strcpy(cli_buffer, commandHistory[historyIndex]);
+          printf("\rMyBareOS> %s", cli_buffer);
+          index = strlen(cli_buffer);
         }
         break;
 
-    case '\t':  // Autocomplete
-      autocompleteHandler(cli_buffer, &index);
-      break;
-
-    case '\n':  // Execute command
-      cli_buffer[index] = '\0';
-      strcpy(commandHistory[lastCommandIndex % MAX_HISTORY], cli_buffer);
-      lastCommandIndex = (lastCommandIndex + 1) % MAX_HISTORY;
-      processCommand(cli_buffer);
-      isNewCommand = 1;
-      index = 0;
-      break;
-
-    default:  // Normal character entry
-      if (index < MAX_CMD_SIZE - 1) {
-        uart_sendc(c);
-        cli_buffer[index++] = c;
+      // Down arrow
+      case 'B':
+        if (historyIndex < lastCommandIndex - 1) {
+            historyIndex++;
+            strcpy(cli_buffer, commandHistory[historyIndex]);
+            printf("\rMyBareOS> %s", cli_buffer);
+            index = strlen(cli_buffer);
+        } 
+        else if (historyIndex == lastCommandIndex - 1) {
+            historyIndex++;
+            cli_buffer[0] = '\0'; // clear buffer to allow new command entry
+            printf("\rMyBareOS> ");
+            index = 0;
+        }
+        break;
       }
-      break;
+    } 
+  // Handle normal characters
+  else {
+    switch (c) {
+      // Handle backspace and delete
+      case 0x7F:
+      case 0x08:
+        if (index > 0) {
+          uart_sendc('\b');      // move cursor backwards
+          uart_sendc(' ');       // overwrite the last character with space
+          uart_sendc('\b');      // move cursor backwards again
+          cli_buffer[--index] = '\0';  // "delete" last char in buffer
+        }
+        break;
+
+      // Handle tab
+      case '\t':
+        autocompleteHandler(cli_buffer, &index);
+        break;
+
+      // Handle enter
+      case '\n':
+        cli_buffer[index] = '\0';
+        if (index > 0) {  // Only save non-empty commands
+          strcpy(commandHistory[historyIndex % MAX_HISTORY], cli_buffer);
+          lastCommandIndex = (lastCommandIndex + 1) % MAX_HISTORY;
+          historyIndex = lastCommandIndex;
+        }
+        processCommand(cli_buffer);
+        isNewCommand = 1;
+        index = 0;
+        break;
+
+      // Handle all other characters
+      default:
+        if (index < MAX_CMD_SIZE - 1) {
+          uart_sendc(c);
+          cli_buffer[index++] = c;
+        }
+        break;
+    }
   }
 }
 
