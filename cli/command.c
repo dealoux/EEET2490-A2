@@ -1,5 +1,5 @@
 #include "command.h"
-#include "../cli/printf.h"
+#include "printf.h"
 #include "../uart/uart1.h"
 #include "../kernel/mbox.h"
 #include "../kernel/string.h"
