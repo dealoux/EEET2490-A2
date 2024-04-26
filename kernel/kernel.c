@@ -1,5 +1,5 @@
 #include "../uart/uart1.h"
-#include "../printf/printf.h"
+#include "../cli/printf.h"
 #include "../cli/cli.h"
 #include "string.h"
 

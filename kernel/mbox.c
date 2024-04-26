@@ -1,7 +1,7 @@
 #include "mbox.h"
 #include "gpio.h"
 #include "../uart/uart1.h"
-#include "../printf/printf.h"
+#include "../cli/printf.h"
 #include "../gcclib/stddef.h"
 #include "../gcclib/stdint.h"
 #include "../gcclib/stdarg.h"

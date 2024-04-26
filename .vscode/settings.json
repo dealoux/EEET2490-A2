@@ -1,0 +1,8 @@
+{
+  "files.associations": {
+    "cli.h": "c",
+    "uart1.h": "c",
+    "mbox.h": "c",
+    "string.h": "c"
+  }
+}
