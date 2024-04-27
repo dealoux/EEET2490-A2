@@ -15,7 +15,7 @@ Command commandList[] = {
   {"showinfo", "Show board revision and board MAC address.", displayBoardInfo},
   // uarts commands
   {"set_baud", "Set UART baud rate.\nExample: MyBareOS> set_baud 9600", setBaudRate},
-  {"set_databits", "Set number of data bits.\nExample: MyBareOS> set_databits 7", setDataBits},
+  {"set_databits", "Set number of data bits configuration to 5, 6, 7, or 8.\nExample: MyBareOS> set_databits 7", setDataBits},
   {"set_stopbits", "Set stop bits configuration to 1 or 2.\nExample: ", setStopBits},
   {"set_parity", "Set parity configuration to one of the following: NONE, EVEN, ODD.\nExample: MyBareOS> set_parity odd", setParity},
   {"set_handshaking", "Set CTS/RTS handshaking to ON or OFF.\nExample: MyBareOS> set_handshaking on", setHandshaking},
@@ -200,6 +200,11 @@ void setBaudRate(char *args) {
 }
 
 void setDataBits(char *args) {
+  if(strcmp(args, "5") != 0 && strcmp(args, "6") != 0 && strcmp(args, "7") != 0 && strcmp(args, "8") != 0) {
+    uart_puts("\nInvalid data bits setting. Use '5', '6', '7', or '8'.\n");
+    return;
+  }
+  
   unsigned char dataBits = (unsigned char)strtoul(args, NULL, 10);
   uart_set_data_bits(dataBits);
   uart_puts("\nData bits setting updated.\n");
