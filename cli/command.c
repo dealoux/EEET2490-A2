@@ -140,12 +140,9 @@ void setConsoleColor(char *args)
   }
 }
 
-void displayBoardInfo(char *args)
-{
+void displayBoardInfo(char *args){
   unsigned int *response = 0;
-  printf("after setup\n");
-  
-  // display board serial
+  // display board model
   mbox_buffer_setup(ADDR(mBuf), MBOX_TAG_GETMODEL, &response, 4, 0);
   mbox_call(ADDR(mBuf), MBOX_CH_PROP);
   printf("\nBoard model %16c %d\n", ':', response[0]);
@@ -204,7 +201,7 @@ void setDataBits(char *args) {
     uart_puts("\nInvalid data bits setting. Use '5', '6', '7', or '8'.\n");
     return;
   }
-  
+
   unsigned char dataBits = (unsigned char)strtoul(args, NULL, 10);
   uart_set_data_bits(dataBits);
   uart_puts("\nData bits setting updated.\n");

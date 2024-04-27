@@ -21,6 +21,7 @@ void processCommand(char *command){
   for (size_t i = 0; i < sizeof(commandList) / sizeof(Command); i++)
   {
     if (strcmp(commandName, commandList[i].name) == 0){
+      printf("\n");
       commandList[i].handler(args);
       return;
     }

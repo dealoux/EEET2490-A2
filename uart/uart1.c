@@ -131,3 +131,22 @@ void uart_dec(int num)
 
 	uart_puts(str);
 }
+
+void uart_set_baud_rate(unsigned int baud_rate){
+
+}
+void uart_set_data_bits(unsigned char data_bits){
+
+}
+void uart_set_stop_bits(unsigned char stop_bits){
+
+}
+void uart_set_parity(char *parity){
+
+}
+void uart_enable_handshaking(){
+
+}
+void uart_disable_handshaking(){
+	
+}
